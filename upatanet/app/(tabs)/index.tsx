@@ -1,17 +1,18 @@
-import React, { useRef } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Animated,
-  TouchableOpacity,
-  Platform,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import NewsCard from "@/components/newsCard";
 import { Colors } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React, { useRef } from "react";
+import {
+  Animated,
+  Image,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const C = Colors.light;
 const BOTTOM_BAR_HEIGHT = 80;
@@ -30,7 +31,8 @@ export default function HomeScreen() {
     {
       id: "1",
       title: "Ola de paludismo en Hasupuwei",
-      snippet: "Han aumentado considerablemente los contagios y afectados por el pal...",
+      snippet:
+        "Han aumentado considerablemente los contagios y afectados por el pal...",
       date: "17/03/26",
       category: "Salud",
       icon: "water",
@@ -48,7 +50,8 @@ export default function HomeScreen() {
     {
       id: "3",
       title: "Tala de árboles cerca de Comun...",
-      snippet: "Han aumentado considerablemente los contagios y afectados por el pal...",
+      snippet:
+        "Han aumentado considerablemente los contagios y afectados por el pal...",
       date: "17/03/26",
       category: "Natur.",
       icon: "leaf",
@@ -57,7 +60,8 @@ export default function HomeScreen() {
     {
       id: "4",
       title: "Se esperan fuertes lluvias estos días",
-      snippet: "Han aumentado considerablemente los contagios y afectados por el pal...",
+      snippet:
+        "Han aumentado considerablemente los contagios y afectados por el pal...",
       date: "17/03/26",
       category: "Clima",
       icon: "rainy",
@@ -69,7 +73,7 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.logoContainer}>
-          <Ionicons name="finger-print" size={32} color={C.primary} />
+          <Image source={require("../../assets/img/min-icon.png")} />
           <Text style={styles.headerTitle}>Upatanet</Text>
         </View>
         <View style={styles.headerActions}>
@@ -128,14 +132,22 @@ export default function HomeScreen() {
           style={styles.tabItem}
           onPress={() => router.push("/(tabs)/alarma")}
         >
-          <Ionicons name="chatbubble-outline" size={24} color={C.placeholderText} />
+          <Ionicons
+            name="chatbubble-outline"
+            size={24}
+            color={C.placeholderText}
+          />
           <Text style={styles.tabText}>Alarma</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.tabItem}
           onPress={() => router.push("/(tabs)/configuracion")}
         >
-          <Ionicons name="settings-outline" size={24} color={C.placeholderText} />
+          <Ionicons
+            name="settings-outline"
+            size={24}
+            color={C.placeholderText}
+          />
           <Text style={styles.tabText}>Configuración</Text>
         </TouchableOpacity>
       </Animated.View>

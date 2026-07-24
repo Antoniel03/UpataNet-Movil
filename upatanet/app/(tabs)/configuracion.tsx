@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -11,6 +12,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ConfiguracionScreen() {
+  const [name, setName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [tribe, setTribe] = useState("");
   const router = useRouter();
 
   return (
@@ -34,26 +38,50 @@ export default function ConfiguracionScreen() {
         <View style={styles.inputContainer}>
           <Text style={styles.title}>Nombre</Text>
           <TextInput
+            value={name}
+            onChangeText={setName}
             placeholderTextColor="#FFFFFF"
             placeholder="Nombre de usuario"
             style={styles.input}
           />
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => console.log("Editar nombre")}
+          >
+            <FontAwesome6 name="pencil" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
         <View style={styles.inputContainer}>
           <Text style={styles.title}>Apellido</Text>
           <TextInput
+            value={lastName}
+            onChangeText={setLastName}
             placeholderTextColor="#FFFFFF"
             placeholder="Apellido de usuario"
             style={styles.input}
           />
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => console.log("Editar apellido")}
+          >
+            <FontAwesome6 name="pencil" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
         <View style={styles.inputContainer}>
           <Text style={styles.title}>Tribu</Text>
           <TextInput
+            value={tribe}
+            onChangeText={setTribe}
             placeholderTextColor="#FFFFFF"
             placeholder="Tribu a la que pertenece"
             style={styles.input}
           />
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => console.log("Editar tribu")}
+          >
+            <FontAwesome6 name="pencil" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -89,9 +117,11 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "flex-start",
+    flexDirection: "column",
     width: "110%",
     marginTop: 12,
     marginLeft: 90,
+    position: "relative",
   },
   input: {
     borderWidth: 1,
@@ -111,6 +141,12 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 200,
-    marginBottom: 8,
+    marginBottom: 16,
+  },
+  editButton: {
+    position: "absolute",
+    right: 115,
+    top: 50,
+    padding: 0,
   },
 });
