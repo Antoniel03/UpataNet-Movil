@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,13 +8,35 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context"; 
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Colors } from "@/constants/theme";
+import { useNoticias } from "@/src/hooks/useNoticias";
 
 const C = Colors.light;
 
 export default function NoticiaScreen() {
   const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { getById, likeNoticia, dislikeNoticia } = useNoticias();
+  const [noticia, setNoticia] = useState(getById(Number(id)));
+
+  useEffect(() => {
+    setNoticia(getById(Number(id)));
+  }, [id, getById]);
+
+  if (!noticia) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Ionicons name="close" size={28} color={C.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Noticia no encontrada</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -22,26 +44,35 @@ export default function NoticiaScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="close" size={28} color={C.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Catalina Flores</Text>
+        <Text style={styles.headerTitle}>Detalle</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.detailCard}>
-          <Text style={styles.title}>Ola de paludismo en Hasupuwei</Text>
-          <Text style={styles.bodyText}>
-            Han aumentado considerablemente los contagios y afectados por el
-            paludismo en la comuidad de Upata bro, qué más te puedo decir, ah
-          </Text>
+          <Text style={styles.title}>{noticia.title}</Text>
+          <Text style={styles.bodyText}>{noticia.body}</Text>
 
           <View style={styles.interactionRow}>
-            <TouchableOpacity style={styles.reactionBtn}>
+            <TouchableOpacity
+              style={styles.reactionBtn}
+              onPress={() => {
+                likeNoticia(noticia.id);
+                setNoticia(getById(noticia.id));
+              }}
+            >
               <Ionicons name="thumbs-up-outline" size={24} color={C.primary} />
-              <Text style={styles.reactionText}>15</Text>
+              <Text style={styles.reactionText}>{String(noticia.likes).padStart(2, "0")}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.reactionBtn}>
+            <TouchableOpacity
+              style={styles.reactionBtn}
+              onPress={() => {
+                dislikeNoticia(noticia.id);
+                setNoticia(getById(noticia.id));
+              }}
+            >
               <Ionicons name="thumbs-down-outline" size={24} color={C.primary} />
-              <Text style={styles.reactionText}>01</Text>
+              <Text style={styles.reactionText}>{String(noticia.dislikes).padStart(2, "0")}</Text>
             </TouchableOpacity>
           </View>
         </View>
