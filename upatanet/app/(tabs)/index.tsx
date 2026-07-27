@@ -1,5 +1,7 @@
 import NewsCard from "@/components/newsCard";
 import { Colors } from "@/constants/theme";
+import { CATEGORIES } from "@/data/categories";
+import { useNoticias } from "@/src/hooks/useNoticias";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useRef } from "react";
@@ -17,8 +19,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const C = Colors.light;
 const BOTTOM_BAR_HEIGHT = 80;
 
+function categoryInfo(id: string) {
+  return CATEGORIES.find((c) => c.id === id) ?? CATEGORIES[0];
+}
+
 export default function HomeScreen() {
   const router = useRouter();
+  const { noticias } = useNoticias();
 
   const scrollY = useRef(new Animated.Value(0)).current;
   const diffClamp = Animated.diffClamp(scrollY, 0, BOTTOM_BAR_HEIGHT);
@@ -26,48 +33,6 @@ export default function HomeScreen() {
     inputRange: [0, BOTTOM_BAR_HEIGHT],
     outputRange: [0, BOTTOM_BAR_HEIGHT],
   });
-
-  const newsData = [
-    {
-      id: "1",
-      title: "Ola de paludismo en Hasupuwei",
-      snippet:
-        "Han aumentado considerablemente los contagios y afectados por el pal...",
-      date: "17/03/26",
-      category: "Salud",
-      icon: "water",
-      color: C.categorySalud,
-    },
-    {
-      id: "2",
-      title: "Llegaron insumos a Mahekoto-teri",
-      snippet: "Entre los insumos que se recibieron están: mantas, cob...",
-      date: "21/05/26",
-      category: "Insum.",
-      icon: "cube",
-      color: C.categoryInsumos,
-    },
-    {
-      id: "3",
-      title: "Tala de árboles cerca de Comun...",
-      snippet:
-        "Han aumentado considerablemente los contagios y afectados por el pal...",
-      date: "17/03/26",
-      category: "Natur.",
-      icon: "leaf",
-      color: C.categoryNaturaleza,
-    },
-    {
-      id: "4",
-      title: "Se esperan fuertes lluvias estos días",
-      snippet:
-        "Han aumentado considerablemente los contagios y afectados por el pal...",
-      date: "17/03/26",
-      category: "Clima",
-      icon: "rainy",
-      color: C.categoryAlertas,
-    },
-  ];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -97,18 +62,25 @@ export default function HomeScreen() {
         )}
         scrollEventThrottle={16}
       >
-        {newsData.map((item) => (
-          <NewsCard
-            key={item.id}
-            title={item.title}
-            snippet={item.snippet}
-            date={item.date}
-            category={item.category}
-            categoryIcon={item.icon as keyof typeof Ionicons.glyphMap}
-            titleColor={item.color}
-            onPress={() => router.push("/noticia")}
-          />
-        ))}
+        {noticias.map((item) => {
+          const cat = categoryInfo(item.categoria ?? "alertas");
+          const snippet =
+            item.descripcion.length > 60
+              ? item.descripcion.slice(0, 57) + "..."
+              : item.descripcion;
+          return (
+            <NewsCard
+              key={item.id}
+              title={item.titulo}
+              snippet={snippet}
+              date={item.datetime ?? ""}
+              category={cat.label}
+              categoryIcon={cat.icon as keyof typeof Ionicons.glyphMap}
+              titleColor={cat.color}
+              onPress={() => router.push({ pathname: "/noticia", params: { id: String(item.id) } })}
+            />
+          );
+        })}
       </Animated.ScrollView>
 
       <Animated.View

@@ -16,11 +16,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { CATEGORIES } from "@/data/categories";
 import { Colors } from "@/constants/theme";
+import { useNoticias } from "@/src/hooks/useNoticias";
 
 const C = Colors.light;
 
 export default function PublicarScreen() {
   const router = useRouter();
+  const { publishNoticia } = useNoticias();
   const [title, setTitle] = React.useState("");
   const [body, setBody] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
@@ -34,9 +36,10 @@ export default function PublicarScreen() {
     setShowPublishModal(true);
   }
 
-  function confirmPublish() {
+  async function confirmPublish() {
+    const id = await publishNoticia({ title, body, category: selectedCategory! });
     setShowPublishModal(false);
-    router.back();
+    router.replace({ pathname: "/noticia", params: { id: String(id) } });
   }
 
   function handleBack() {
