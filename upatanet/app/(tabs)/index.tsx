@@ -63,17 +63,21 @@ export default function HomeScreen() {
         scrollEventThrottle={16}
       >
         {noticias.map((item) => {
-          const cat = categoryInfo(item.category);
+          const cat = categoryInfo(item.categoria ?? "alertas");
+          const snippet =
+            item.descripcion.length > 60
+              ? item.descripcion.slice(0, 57) + "..."
+              : item.descripcion;
           return (
             <NewsCard
               key={item.id}
-              title={item.title}
-              snippet={item.snippet}
-              date={item.date}
+              title={item.titulo}
+              snippet={snippet}
+              date={item.datetime ?? ""}
               category={cat.label}
               categoryIcon={cat.icon as keyof typeof Ionicons.glyphMap}
               titleColor={cat.color}
-              onPress={() => router.push({ pathname: "/noticia", params: { id: item.id } })}
+              onPress={() => router.push({ pathname: "/noticia", params: { id: String(item.id) } })}
             />
           );
         })}

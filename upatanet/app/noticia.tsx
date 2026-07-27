@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Colors } from "@/constants/theme";
 import { useNoticias } from "@/src/hooks/useNoticias";
+import type { Noticia } from "@/src/data/noticiasStore";
 
 const C = Colors.light;
 
@@ -18,10 +19,10 @@ export default function NoticiaScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getById, likeNoticia, dislikeNoticia } = useNoticias();
-  const [noticia, setNoticia] = useState(getById(Number(id)));
+  const [noticia, setNoticia] = useState<Noticia | null>(null);
 
   useEffect(() => {
-    setNoticia(getById(Number(id)));
+    getById(Number(id)).then(setNoticia);
   }, [id, getById]);
 
   if (!noticia) {
@@ -50,15 +51,16 @@ export default function NoticiaScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.detailCard}>
-          <Text style={styles.title}>{noticia.title}</Text>
-          <Text style={styles.bodyText}>{noticia.body}</Text>
+          <Text style={styles.title}>{noticia.titulo}</Text>
+          <Text style={styles.bodyText}>{noticia.descripcion}</Text>
 
           <View style={styles.interactionRow}>
             <TouchableOpacity
               style={styles.reactionBtn}
-              onPress={() => {
-                likeNoticia(noticia.id);
-                setNoticia(getById(noticia.id));
+              onPress={async () => {
+                await likeNoticia(noticia.id);
+                const updated = await getById(noticia.id);
+                if (updated) setNoticia(updated);
               }}
             >
               <Ionicons name="thumbs-up-outline" size={24} color={C.primary} />
@@ -66,9 +68,10 @@ export default function NoticiaScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.reactionBtn}
-              onPress={() => {
-                dislikeNoticia(noticia.id);
-                setNoticia(getById(noticia.id));
+              onPress={async () => {
+                await dislikeNoticia(noticia.id);
+                const updated = await getById(noticia.id);
+                if (updated) setNoticia(updated);
               }}
             >
               <Ionicons name="thumbs-down-outline" size={24} color={C.primary} />

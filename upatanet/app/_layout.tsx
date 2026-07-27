@@ -1,7 +1,10 @@
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
+import { initDatabase } from '@/src/db/database';
 
 const UpatanetTheme = {
   ...DefaultTheme,
@@ -21,6 +24,32 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
+  const [ready, setReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    initDatabase()
+      .then(() => setReady(true))
+      .catch((e) => setError(e instanceof Error ? e.message : 'Error al iniciar'));
+  }, []);
+
+  if (error) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F2ECE0' }}>
+        <StatusBar style="dark" />
+      </View>
+    );
+  }
+
+  if (!ready) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F2ECE0' }}>
+        <ActivityIndicator size="large" color="#C43B26" />
+        <StatusBar style="dark" />
+      </View>
+    );
+  }
+
   return (
     <ThemeProvider value={UpatanetTheme}>
       <Stack>

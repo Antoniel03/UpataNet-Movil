@@ -36,10 +36,10 @@ export default function PublicarScreen() {
     setShowPublishModal(true);
   }
 
-  function confirmPublish() {
-    const id = publishNoticia({ title, body, category: selectedCategory! });
+  async function confirmPublish() {
+    const id = await publishNoticia({ title, body, category: selectedCategory! });
     setShowPublishModal(false);
-    router.replace({ pathname: "/noticia", params: { id } });
+    router.replace({ pathname: "/noticia", params: { id: String(id) } });
   }
 
   function handleBack() {
