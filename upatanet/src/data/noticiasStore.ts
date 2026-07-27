@@ -7,6 +7,7 @@ import {
   updateDislikes,
   type NoticiaRow,
 } from "@/src/repositories/noticiaRepository";
+import { updateNoticiaInYjs } from "@/src/sync/SyncService";
 
 export type Noticia = NoticiaRow;
 
@@ -50,6 +51,8 @@ export async function publishNoticia(data: {
     categoria: data.category,
     datetime: date,
   });
+  const created = await repoGetNoticiaById(db, id);
+  if (created) updateNoticiaInYjs(created as unknown as Record<string, unknown>);
   notify();
   return id;
 }
@@ -59,6 +62,8 @@ export async function likeNoticia(id: number): Promise<void> {
   const noticia = await repoGetNoticiaById(db, id);
   if (noticia) {
     await updateLikes(db, id, noticia.likes + 1);
+    const updated = await repoGetNoticiaById(db, id);
+    if (updated) updateNoticiaInYjs(updated as unknown as Record<string, unknown>);
     notify();
   }
 }
@@ -68,6 +73,8 @@ export async function dislikeNoticia(id: number): Promise<void> {
   const noticia = await repoGetNoticiaById(db, id);
   if (noticia) {
     await updateDislikes(db, id, noticia.dislikes + 1);
+    const updated = await repoGetNoticiaById(db, id);
+    if (updated) updateNoticiaInYjs(updated as unknown as Record<string, unknown>);
     notify();
   }
 }

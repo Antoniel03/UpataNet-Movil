@@ -1,3 +1,5 @@
+import "@/src/sync/polyfills";
+
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -5,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
 import { initDatabase } from '@/src/db/database';
+import { initSync } from '@/src/sync/SyncService';
 
 const UpatanetTheme = {
   ...DefaultTheme,
@@ -29,7 +32,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     initDatabase()
-      .then(() => setReady(true))
+      .then(() => {
+        initSync();
+        setReady(true);
+      })
       .catch((e) => setError(e instanceof Error ? e.message : 'Error al iniciar'));
   }, []);
 
