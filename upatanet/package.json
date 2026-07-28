@@ -31,6 +31,7 @@
     "expo-symbols": "~1.0.8",
     "expo-system-ui": "~6.0.9",
     "expo-web-browser": "~15.0.11",
+    "lib0": "^0.2.117",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-native": "0.81.5",
@@ -41,6 +42,8 @@
     "react-native-svg": "^15.12.1",
     "react-native-web": "~0.21.0",
     "react-native-worklets-core": "^1.6.3",
+    "ws": "^8.21.1",
+    "y-protocols": "^1.0.7",
     "y-websocket": "^3.0.0",
     "yjs": "^13.6.31"
   },

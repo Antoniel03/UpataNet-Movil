@@ -4,7 +4,7 @@ import { CATEGORIES } from "@/data/categories";
 import { useNoticias } from "@/src/hooks/useNoticias";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useRef } from "react";
+import { useCallback, useRef } from "react";
 import {
   Animated,
   Image,
@@ -25,7 +25,7 @@ function categoryInfo(id: string) {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { noticias } = useNoticias();
+  const { noticias, loadNoticias } = useNoticias();
 
   const scrollY = useRef(new Animated.Value(0)).current;
   const diffClamp = Animated.diffClamp(scrollY, 0, BOTTOM_BAR_HEIGHT);
@@ -33,6 +33,10 @@ export default function HomeScreen() {
     inputRange: [0, BOTTOM_BAR_HEIGHT],
     outputRange: [0, BOTTOM_BAR_HEIGHT],
   });
+
+  const onRefresh = useCallback(async () => {
+    await loadNoticias();
+  }, [loadNoticias]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -48,8 +52,8 @@ export default function HomeScreen() {
           >
             <Ionicons name="arrow-up" size={20} color={C.textInverse} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="pencil" size={20} color={C.textInverse} />
+          <TouchableOpacity style={styles.iconButton} onPress={onRefresh}>
+            <Ionicons name="reload-outline" size={20} color={C.textInverse} />
           </TouchableOpacity>
         </View>
       </View>
@@ -77,7 +81,12 @@ export default function HomeScreen() {
               category={cat.label}
               categoryIcon={cat.icon as keyof typeof Ionicons.glyphMap}
               titleColor={cat.color}
-              onPress={() => router.push({ pathname: "/noticia", params: { id: String(item.id) } })}
+              onPress={() =>
+                router.push({
+                  pathname: "/noticia",
+                  params: { id: String(item.id) },
+                })
+              }
             />
           );
         })}

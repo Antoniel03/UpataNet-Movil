@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
 import {
-  getNoticias,
   getNoticiaById,
-  publishNoticia as storePublish,
-  likeNoticia as storeLike,
+  getNoticias,
   dislikeNoticia as storeDislike,
+  likeNoticia as storeLike,
+  publishNoticia as storePublish,
   subscribe,
   type Noticia,
 } from "@/src/data/noticiasStore";
+import { useCallback, useEffect, useState } from "react";
 
 export function useNoticias() {
   const [noticias, setNoticias] = useState<Noticia[]>([]);
@@ -54,5 +54,6 @@ export function useNoticias() {
     getById,
     likeNoticia: like,
     dislikeNoticia: dislike,
+    loadNoticias,
   };
 }

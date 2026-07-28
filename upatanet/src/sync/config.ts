@@ -1,1 +1,1 @@
-export const SYNC_SERVER_URL = "ws://192.168.1.100:1234";
+export const SYNC_SERVER_URL = "ws://10.27.12.160:1234";
