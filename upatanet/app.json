@@ -7,16 +7,11 @@
     "icon": "./assets/img/splash-icon.png",
     "primaryColor": "#F2ECE0",
     "scheme": "upatanet",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/img/splash-icon-title.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F2ECE0",
-      "dark": {
-        "image": "./assets/img/splash-icon-title.png",
-        "resizeMode": "contain",
-        "backgroundColor": "#F2ECE0"
-      }
+      "backgroundColor": "#F2ECE0"
     },
     "ios": {
       "supportsTablet": true,
@@ -29,11 +24,7 @@
       },
       "splash": {
         "image": "./assets/img/splash-icon-title.png",
-        "backgroundColor": "#F2ECE0",
-        "dark": {
-          "image": "./assets/img/splash-icon-title.png",
-          "backgroundColor": "#F2ECE0"
-        }
+        "backgroundColor": "#F2ECE0"
       },
       "package": "com.upatanet.app"
     },
