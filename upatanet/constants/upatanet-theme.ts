@@ -8,8 +8,9 @@ export const Colors = {
     primary: '#C43B26',
     primaryDark: '#E3361C',
     chipBg: '#DFDAD0',
-    chipBgActive: '#C5AB92',
+    chipBgActive: 'rgba(197, 171, 146, 0.6)',
     text: '#1C1C1E',
+    textDark: '#1C1C1E',
     textInverse: '#F2ECE0',
     modalBg: '#1C1C1E',
     modalButtonGray: '#3A3A3C',
@@ -18,14 +19,13 @@ export const Colors = {
     categoryInsumos: '#1D4E89',
     categoryNaturaleza: '#3B6E4A',
     categoryAlertas: '#E8A13C',
-    borderSubtle: '#A58B70',
+    borderSubtle: 'rgba(165, 139, 112, 0.25)',
     placeholderText: '#8A8378',
     tint: '#C43B26',
     icon: '#8A8378',
     tabIconDefault: '#8A8378',
     tabIconSelected: '#C43B26',
   },
-
 };
 
 export const Fonts = Platform.select({

@@ -11,8 +11,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/theme';
+import { Colors } from '@/constants/upatanet-theme';
 import { useBleAlarm } from '@/hooks/use-ble-alarm';
+import { useAlarmaPublicacion } from '@/src/hooks/useAlarmaPublicacion';
 import { addAlarmActivation, initSync } from '@/src/sync/SyncService';
 import * as Crypto from 'expo-crypto';
 
@@ -37,6 +38,8 @@ export default function AlarmaScreen() {
   } = useBleAlarm();
   const [isBusy, setIsBusy] = useState(false);
   const [isSyncInitialized, setIsSyncInitialized] = useState(false);
+
+  useAlarmaPublicacion({ status });
 
   useEffect(() => {
     if (!isSyncInitialized) {

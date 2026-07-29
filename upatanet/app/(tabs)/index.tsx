@@ -1,5 +1,5 @@
 import NewsCard from "@/components/newsCard";
-import { Colors } from "@/constants/theme";
+import { Colors } from "@/constants/upatanet-theme";
 import { CATEGORIES } from "@/data/categories";
 import { useNoticias } from "@/src/hooks/useNoticias";
 import { Ionicons } from "@expo/vector-icons";

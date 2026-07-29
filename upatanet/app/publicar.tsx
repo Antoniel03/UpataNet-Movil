@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { CATEGORIES } from "@/data/categories";
-import { Colors } from "@/constants/theme";
+import { Colors } from "@/constants/upatanet-theme";
 import { useNoticias } from "@/src/hooks/useNoticias";
 
 const C = Colors.light;
