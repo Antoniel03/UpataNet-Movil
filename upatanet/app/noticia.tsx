@@ -9,7 +9,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context"; 
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { Colors } from "@/constants/theme";
+import { Colors } from "@/constants/upatanet-theme";
 import { useNoticias } from "@/src/hooks/useNoticias";
 import type { Noticia } from "@/src/data/noticiasStore";
 

@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router";
 import React from "react";
 
-import { Colors } from "@/constants/theme";
+import { Colors } from "@/constants/upatanet-theme";
 
 export default function TabLayout() {
   return (

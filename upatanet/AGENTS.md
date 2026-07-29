@@ -21,7 +21,7 @@ Antes de usar cualquier API de Expo, **verifica contra esa URL** que la firma y 
 **Path alias configurado:** `@/*` → `./` (raíz del proyecto `upatanet/`).
 Ejemplo: `import { CATEGORIES } from '@/data/categories';`
 
-**Package manager:** pnpm (existe `pnpm-lock.yaml`). NO mezclar con npm/yarn.
+**Package manager:** npm (existe `package-lock.json`). NO mezclar con pnpm/yarn.
 
 ---
 
@@ -277,7 +277,7 @@ Antes de escribir código, un agente debe:
 2. **Consultar https://docs.expo.dev/versions/v54.0.0/** si usa APIs de Expo dudosas.
 3. **Explorar la estructura** con `Glob`/`Read` antes de crear archivos nuevos (evitar duplicados).
 4. **Revisar `package.json`** para confirmar que una dependencia ya existe antes de importarla.
-5. **Verificar el lint:** tras cambios, correr `pnpm lint` y `pnpm exec tsc --noEmit`.
+5. **Verificar el lint:** tras cambios, correr `npm run lint` y `npx tsc --noEmit`.
 6. **NO commitear** salvo pedido explícito del usuario.
 7. **Si surge una decisión no contemplada aquí,** preguntar al usuario antes de asumirla.
 
@@ -320,4 +320,4 @@ Estos textos deben aparecer EXACTAMENTE (no parafrasear):
 - **No inventar URLs ni endpoints.** Mientras no haya backend, todo es mock local en `data/`.
 - **El usuario decide el alcance por fase.** Si pide solo X, no implementar Y "de paso".
 - **Cualquier ambigüedad se resuelve con `question` tool, no asumiendo.**
-- **Después de completar una tarea:** correr `pnpm lint` y `pnpm exec tsc --noEmit` y reportar resultado al usuario.
+- **Después de completar una tarea:** correr `npm run lint` y `npx tsc --noEmit` y reportar resultado al usuario.

@@ -8,6 +8,7 @@ const ROOM_NAME = "upatanet-sync";
 
 export type SyncSubscriber = {
   onNoticiasChange: () => void;
+  onAlarmActivationsChange?: () => void;
 };
 
 let ydoc: Y.Doc | null = null;
@@ -30,6 +31,12 @@ function notifyNoticiasChange() {
   }
 }
 
+function notifyAlarmActivationsChange() {
+  for (const sub of subscribers) {
+    sub.onAlarmActivationsChange?.();
+  }
+}
+
 export function getYDoc(): Y.Doc | null {
   return ydoc;
 }
@@ -38,6 +45,46 @@ export function updateNoticiaInYjs(noticia: Record<string, unknown>) {
   if (!ydoc) return;
   const map = ydoc.getMap("noticias");
   map.set(String(noticia.id), noticia);
+}
+
+export interface AlarmActivation {
+  id: string;
+  communityId: string;
+  authorPeerId: string;
+  esp32Mac: string;
+  action: 'on' | 'off';
+  timestamp: number;
+  battery?: number;
+}
+
+export function getAlarmActivationsArray(): Y.Array<AlarmActivation> | null {
+  if (!ydoc) return null;
+  return ydoc.getArray<AlarmActivation>("alarm_activations");
+}
+
+export function addAlarmActivation(activation: AlarmActivation) {
+  if (!ydoc) return;
+  const arr = ydoc.getArray<AlarmActivation>("alarm_activations");
+  arr.push([activation]);
+  notifyAlarmActivationsChange();
+
+  // Auto-generate 'negro' news post when alarm is triggered
+  if (activation.action === 'on') {
+    const newsId = `alarm-${activation.id}`;
+    const map = ydoc.getMap("noticias");
+    map.set(newsId, {
+      id: newsId,
+      usuario_id: 1,
+      titulo: `🚨 Alarma activada en ${activation.communityId}`,
+      descripcion: `Alarma activada por dispositivo ${activation.esp32Mac.slice(-5)} a las ${new Date(activation.timestamp).toLocaleTimeString()}`,
+      categoria: 'alerta',
+      datetime: new Date(activation.timestamp).toISOString(),
+      likes: 0,
+      dislikes: 0,
+      severity: 'negro',
+      sourceAlarmId: activation.id,
+    } as Record<string, unknown>);
+  }
 }
 
 export function initSync() {
