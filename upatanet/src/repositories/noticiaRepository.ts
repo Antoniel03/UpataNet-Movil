@@ -14,18 +14,11 @@ export interface NoticiaRow {
   comunidad_nombre: string;
 }
 
-const NOTICIA_WITH_REACTIONS = `
-  SELECT n.*,
-    (SELECT COUNT(*) FROM Noticia_Reaction WHERE noticia_id = n.id AND tipo = 'like') as likes,
-    (SELECT COUNT(*) FROM Noticia_Reaction WHERE noticia_id = n.id AND tipo = 'dislike') as dislikes
-  FROM Noticia n
-`;
-
 export async function getAllNoticias(
   db: SQLiteDatabase,
 ): Promise<NoticiaRow[]> {
   return db.getAllAsync<NoticiaRow>(
-    NOTICIA_WITH_REACTIONS + " ORDER BY n.id DESC",
+    "SELECT * FROM Noticia ORDER BY id DESC",
   );
 }
 
@@ -34,7 +27,7 @@ export async function getNoticiaById(
   id: number,
 ): Promise<NoticiaRow | null> {
   return db.getFirstAsync<NoticiaRow>(
-    NOTICIA_WITH_REACTIONS + " WHERE n.id = ?",
+    "SELECT * FROM Noticia WHERE id = ?",
     [id],
   );
 }
@@ -59,12 +52,38 @@ export async function createNoticia(
   return result.lastInsertRowId;
 }
 
+export async function syncNoticiaCounts(
+  db: SQLiteDatabase,
+  noticia_id: number,
+): Promise<void> {
+  const likes = await db.getFirstAsync<{ count: number }>(
+    "SELECT COUNT(*) as count FROM Noticia_Reaction WHERE noticia_id = ? AND tipo = 'like'",
+    [noticia_id],
+  );
+  const dislikes = await db.getFirstAsync<{ count: number }>(
+    "SELECT COUNT(*) as count FROM Noticia_Reaction WHERE noticia_id = ? AND tipo = 'dislike'",
+    [noticia_id],
+  );
+  await db.runAsync(
+    "UPDATE Noticia SET likes = ?, dislikes = ? WHERE id = ?",
+    [likes?.count ?? 0, dislikes?.count ?? 0, noticia_id],
+  );
+}
+
+export async function getAllReactions(
+  db: SQLiteDatabase,
+): Promise<{ noticia_id: number; usuario_id: number; tipo: string }[]> {
+  return db.getAllAsync<{ noticia_id: number; usuario_id: number; tipo: string }>(
+    "SELECT noticia_id, usuario_id, tipo FROM Noticia_Reaction",
+  );
+}
+
 export async function upsertReaction(
   db: SQLiteDatabase,
   usuario_id: number,
   noticia_id: number,
   tipo: "like" | "dislike",
-): Promise<void> {
+): Promise<"like" | "dislike" | null> {
   const existing = await db.getFirstAsync<{ id: number; tipo: string }>(
     "SELECT id, tipo FROM Noticia_Reaction WHERE usuario_id = ? AND noticia_id = ?",
     [usuario_id, noticia_id],
@@ -73,16 +92,19 @@ export async function upsertReaction(
   if (existing) {
     if (existing.tipo === tipo) {
       await db.runAsync("DELETE FROM Noticia_Reaction WHERE id = ?", [existing.id]);
+      return null;
     } else {
       await db.runAsync("UPDATE Noticia_Reaction SET tipo = ? WHERE id = ?", [
         tipo,
         existing.id,
       ]);
+      return tipo;
     }
   } else {
     await db.runAsync(
       "INSERT INTO Noticia_Reaction (usuario_id, noticia_id, tipo) VALUES (?, ?, ?)",
       [usuario_id, noticia_id, tipo],
     );
+    return tipo;
   }
 }

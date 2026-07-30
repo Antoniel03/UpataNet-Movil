@@ -49,7 +49,9 @@ CREATE TABLE IF NOT EXISTS Noticia (
   datetime TEXT,
   usuario_nombre TEXT NOT NULL DEFAULT '',
   usuario_apellido TEXT NOT NULL DEFAULT '',
-  comunidad_nombre TEXT NOT NULL DEFAULT ''
+  comunidad_nombre TEXT NOT NULL DEFAULT '',
+  likes INTEGER NOT NULL DEFAULT 0,
+  dislikes INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS Alarma (

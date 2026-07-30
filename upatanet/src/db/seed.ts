@@ -13,11 +13,11 @@ export async function seedIfEmpty(db: SQLiteDatabase) {
 
     INSERT INTO Centro_Medico (id, nombre, ubicacion, contacto) VALUES (1, 'Centro General', '', '');
 
-    INSERT INTO Noticia (id, usuario_id, titulo, descripcion, categoria, datetime, usuario_nombre, usuario_apellido, comunidad_nombre) VALUES
-      (1, 1, 'Ola de paludismo en Hasupuwei', 'Han aumentado considerablemente los contagios y afectados por el paludismo en la comunidad de Upata. Se necesita atención médica urgente.', 'salud', '17/03/26 10:30', 'Usuario', '', 'General'),
-      (2, 1, 'Llegaron insumos a Mahekoto-teri', 'Entre los insumos que se recibieron están: mantas, cobijas, medicamentos y alimentos no perecederos para la comunidad de Mahekoto-teri.', 'insumos', '21/05/26 14:15', 'Usuario', '', 'General'),
-      (3, 1, 'Tala de árboles cerca de Comun', 'Se ha reportado tala indiscriminada de árboles en los alrededores de la comunidad. Solicitamos intervención de las autoridades ambientales.', 'naturaleza', '17/03/26 08:45', 'Usuario', '', 'General'),
-      (4, 1, 'Se esperan fuertes lluvias estos días', 'El servicio meteorológico ha emitido alerta por fuertes lluvias en la región durante los próximos días. Se recomienda tomar precauciones.', 'alertas', '17/03/26 16:00', 'Usuario', '', 'General');
+    INSERT INTO Noticia (id, usuario_id, titulo, descripcion, categoria, datetime, usuario_nombre, usuario_apellido, comunidad_nombre, likes, dislikes) VALUES
+      (1, 1, 'Ola de paludismo en Hasupuwei', 'Han aumentado considerablemente los contagios y afectados por el paludismo en la comunidad de Upata. Se necesita atención médica urgente.', 'salud', '17/03/26 10:30', 'Usuario', '', 'General', 1, 0),
+      (2, 1, 'Llegaron insumos a Mahekoto-teri', 'Entre los insumos que se recibieron están: mantas, cobijas, medicamentos y alimentos no perecederos para la comunidad de Mahekoto-teri.', 'insumos', '21/05/26 14:15', 'Usuario', '', 'General', 1, 0),
+      (3, 1, 'Tala de árboles cerca de Comun', 'Se ha reportado tala indiscriminada de árboles en los alrededores de la comunidad. Solicitamos intervención de las autoridades ambientales.', 'naturaleza', '17/03/26 08:45', 'Usuario', '', 'General', 0, 1),
+      (4, 1, 'Se esperan fuertes lluvias estos días', 'El servicio meteorológico ha emitido alerta por fuertes lluvias en la región durante los próximos días. Se recomienda tomar precauciones.', 'alertas', '17/03/26 16:00', 'Usuario', '', 'General', 1, 0);
 
     INSERT INTO Noticia_Reaction (usuario_id, noticia_id, tipo) VALUES
       (1, 1, 'like'),

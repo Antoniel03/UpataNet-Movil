@@ -6,7 +6,7 @@ import {
   upsertReaction,
   type NoticiaRow,
 } from "@/src/repositories/noticiaRepository";
-import { updateNoticiaInYjs } from "@/src/sync/SyncService";
+import { syncReactionToYjs, updateNoticiaInYjs } from "@/src/sync/SyncService";
 import { getCurrentUsuarioId, loadPerfil } from "@/src/data/usuario-store";
 
 export type Noticia = NoticiaRow;
@@ -67,17 +67,15 @@ export async function publishNoticia(data: {
 export async function likeNoticia(id: number): Promise<void> {
   const db = getDb();
   const usuario_id = await getCurrentUsuarioId();
-  await upsertReaction(db, usuario_id, id, "like");
-  const updated = await repoGetNoticiaById(db, id);
-  if (updated) updateNoticiaInYjs(updated as unknown as Record<string, unknown>);
+  const result = await upsertReaction(db, usuario_id, id, "like");
+  syncReactionToYjs(id, usuario_id, result ?? "");
   notify();
 }
 
 export async function dislikeNoticia(id: number): Promise<void> {
   const db = getDb();
   const usuario_id = await getCurrentUsuarioId();
-  await upsertReaction(db, usuario_id, id, "dislike");
-  const updated = await repoGetNoticiaById(db, id);
-  if (updated) updateNoticiaInYjs(updated as unknown as Record<string, unknown>);
+  const result = await upsertReaction(db, usuario_id, id, "dislike");
+  syncReactionToYjs(id, usuario_id, result ?? "");
   notify();
 }
