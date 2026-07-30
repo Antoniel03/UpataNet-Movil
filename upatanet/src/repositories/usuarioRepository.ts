@@ -86,3 +86,22 @@ export async function updatePerfil(
     );
   }
 }
+
+export async function isUsuarioRegistered(db: SQLiteDatabase): Promise<boolean> {
+  const usuario = await getDefaultUsuario(db);
+  if (!usuario) return false;
+  return usuario.nombre.trim() !== "" && usuario.apellido.trim() !== "";
+}
+
+export async function clearUserDataRepo(db: SQLiteDatabase): Promise<void> {
+  const usuario = await getDefaultUsuario(db);
+  if (!usuario) return;
+  await db.runAsync(
+    "UPDATE Usuario SET nombre = '', apellido = '' WHERE id = ?",
+    [usuario.id],
+  );
+  await db.runAsync(
+    "DELETE FROM Indigena WHERE usuario_id = ?",
+    [usuario.id],
+  );
+}

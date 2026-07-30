@@ -4,10 +4,11 @@ import { CATEGORIES } from "@/data/categories";
 import { useNoticias } from "@/src/hooks/useNoticias";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   Animated,
   Image,
+  Modal,
   Platform,
   StyleSheet,
   Text,
@@ -15,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useUsuario } from "@/src/hooks/use-usuario";
 
 const C = Colors.light;
 const BOTTOM_BAR_HEIGHT = 80;
@@ -26,6 +28,8 @@ function categoryInfo(id: string) {
 export default function HomeScreen() {
   const router = useRouter();
   const { noticias, loadNoticias } = useNoticias();
+  const { isRegistered } = useUsuario();
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
 
   const scrollY = useRef(new Animated.Value(0)).current;
   const diffClamp = Animated.diffClamp(scrollY, 0, BOTTOM_BAR_HEIGHT);
@@ -48,7 +52,13 @@ export default function HomeScreen() {
         <View style={styles.headerActions}>
           <TouchableOpacity
             style={styles.iconButton}
-            onPress={() => router.push("/publicar")}
+            onPress={() => {
+              if (isRegistered) {
+                router.push("/publicar");
+              } else {
+                setShowRegisterModal(true);
+              }
+            }}
           >
             <Ionicons name="arrow-up" size={20} color={C.textInverse} />
           </TouchableOpacity>
@@ -132,6 +142,37 @@ export default function HomeScreen() {
           <Text style={styles.tabText}>Configuración</Text>
         </TouchableOpacity>
       </Animated.View>
+      <Modal
+        visible={showRegisterModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowRegisterModal(false)}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalText}>
+              Debe registrarse antes de publicar una noticia
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: C.primary }]}
+                onPress={() => {
+                  setShowRegisterModal(false);
+                  router.push("/(tabs)/configuracion");
+                }}
+              >
+                <Text style={styles.modalBtnText}>Ir a configuración</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: C.modalButtonGray }]}
+                onPress={() => setShowRegisterModal(false)}
+              >
+                <Text style={styles.modalBtnText}>Cerrar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -174,4 +215,33 @@ const styles = StyleSheet.create({
   },
   tabItem: { alignItems: "center" },
   tabText: { fontSize: 12, marginTop: 4, color: C.placeholderText },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalBox: {
+    width: 291,
+    backgroundColor: C.modalBg,
+    borderRadius: 20,
+    padding: 24,
+    alignItems: "center",
+  },
+  modalText: {
+    fontSize: 16,
+    lineHeight: 22,
+    color: C.textInverse,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  modalActions: { flexDirection: "row", gap: 12 },
+  modalBtn: {
+    paddingHorizontal: 20,
+    height: 35,
+    borderRadius: 17.5,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalBtnText: { fontSize: 14, fontWeight: "600", color: C.textInverse },
 });
