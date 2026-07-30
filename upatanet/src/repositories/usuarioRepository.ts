@@ -87,6 +87,11 @@ export async function updatePerfil(
   }
 }
 
+export async function getDefaultUsuarioId(db: SQLiteDatabase): Promise<number> {
+  const usuario = await getDefaultUsuario(db);
+  return usuario?.id ?? 1;
+}
+
 export async function isUsuarioRegistered(db: SQLiteDatabase): Promise<boolean> {
   const usuario = await getDefaultUsuario(db);
   if (!usuario) return false;

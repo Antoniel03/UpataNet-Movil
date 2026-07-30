@@ -3,11 +3,11 @@ import {
   getAllNoticias,
   getNoticiaById as repoGetNoticiaById,
   createNoticia,
-  updateLikes,
-  updateDislikes,
+  upsertReaction,
   type NoticiaRow,
 } from "@/src/repositories/noticiaRepository";
 import { updateNoticiaInYjs } from "@/src/sync/SyncService";
+import { getCurrentUsuarioId } from "@/src/data/usuario-store";
 
 export type Noticia = NoticiaRow;
 
@@ -59,22 +59,18 @@ export async function publishNoticia(data: {
 
 export async function likeNoticia(id: number): Promise<void> {
   const db = getDb();
-  const noticia = await repoGetNoticiaById(db, id);
-  if (noticia) {
-    await updateLikes(db, id, noticia.likes + 1);
-    const updated = await repoGetNoticiaById(db, id);
-    if (updated) updateNoticiaInYjs(updated as unknown as Record<string, unknown>);
-    notify();
-  }
+  const usuario_id = await getCurrentUsuarioId();
+  await upsertReaction(db, usuario_id, id, "like");
+  const updated = await repoGetNoticiaById(db, id);
+  if (updated) updateNoticiaInYjs(updated as unknown as Record<string, unknown>);
+  notify();
 }
 
 export async function dislikeNoticia(id: number): Promise<void> {
   const db = getDb();
-  const noticia = await repoGetNoticiaById(db, id);
-  if (noticia) {
-    await updateDislikes(db, id, noticia.dislikes + 1);
-    const updated = await repoGetNoticiaById(db, id);
-    if (updated) updateNoticiaInYjs(updated as unknown as Record<string, unknown>);
-    notify();
-  }
+  const usuario_id = await getCurrentUsuarioId();
+  await upsertReaction(db, usuario_id, id, "dislike");
+  const updated = await repoGetNoticiaById(db, id);
+  if (updated) updateNoticiaInYjs(updated as unknown as Record<string, unknown>);
+  notify();
 }

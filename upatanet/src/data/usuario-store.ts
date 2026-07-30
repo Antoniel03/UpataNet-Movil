@@ -1,5 +1,6 @@
 import { getDb } from "@/src/db/database";
 import {
+  getDefaultUsuarioId,
   getPerfil,
   isUsuarioRegistered,
   updatePerfil,
@@ -51,4 +52,9 @@ export async function clearUserData(): Promise<void> {
   await clearUserDataRepo(db);
   cachedRegistered = false;
   notify();
+}
+
+export async function getCurrentUsuarioId(): Promise<number> {
+  const db = getDb();
+  return getDefaultUsuarioId(db);
 }
