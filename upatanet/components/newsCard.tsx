@@ -12,6 +12,8 @@ interface NewsCardProps {
   category: string;
   categoryIcon: keyof typeof Ionicons.glyphMap;
   titleColor: string;
+  authorName: string;
+  communityName: string;
   onPress: () => void;
 }
 
@@ -22,6 +24,8 @@ export default function NewsCard({
   category,
   categoryIcon,
   titleColor,
+  authorName,
+  communityName,
   onPress,
 }: NewsCardProps) {
   return (
@@ -30,6 +34,14 @@ export default function NewsCard({
       <Text style={styles.snippet} numberOfLines={2}>
         {snippet}
       </Text>
+
+      <View style={styles.authorRow}>
+        <Ionicons name="person-outline" size={14} color={C.placeholderText} />
+        <Text style={styles.authorText}>{authorName}</Text>
+        {communityName ? (
+          <Text style={styles.authorText}> · {communityName}</Text>
+        ) : null}
+      </View>
 
       <View style={styles.footer}>
         <Text style={styles.date}>Subido el {date}</Text>
@@ -66,8 +78,18 @@ const styles = StyleSheet.create({
   snippet: {
     fontSize: 14,
     color: C.text,
-    marginBottom: 16,
+    marginBottom: 8,
     lineHeight: 20,
+  },
+  authorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 12,
+  },
+  authorText: {
+    fontSize: 12,
+    color: C.placeholderText,
   },
   footer: {
     flexDirection: "row",

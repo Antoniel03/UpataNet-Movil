@@ -7,7 +7,7 @@ import {
   type NoticiaRow,
 } from "@/src/repositories/noticiaRepository";
 import { updateNoticiaInYjs } from "@/src/sync/SyncService";
-import { getCurrentUsuarioId } from "@/src/data/usuario-store";
+import { getCurrentUsuarioId, loadPerfil } from "@/src/data/usuario-store";
 
 export type Noticia = NoticiaRow;
 
@@ -44,12 +44,19 @@ export async function publishNoticia(data: {
   const db = getDb();
   const now = new Date();
   const date = `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${String(now.getFullYear()).slice(2)} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  const perfil = await loadPerfil();
+  const userNombre = perfil?.nombre ?? "";
+  const userApellido = perfil?.apellido ?? "";
+  const comunidadNombre = perfil?.comunidad ?? "";
   const id = await createNoticia(db, {
     usuario_id: 1,
     titulo: data.title,
     descripcion: data.body,
     categoria: data.category,
     datetime: date,
+    usuario_nombre: userNombre,
+    usuario_apellido: userApellido,
+    comunidad_nombre: comunidadNombre,
   });
   const created = await repoGetNoticiaById(db, id);
   if (created) updateNoticiaInYjs(created as unknown as Record<string, unknown>);

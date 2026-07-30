@@ -91,6 +91,8 @@ export default function HomeScreen() {
               category={cat.label}
               categoryIcon={cat.icon as keyof typeof Ionicons.glyphMap}
               titleColor={cat.color}
+              authorName={`${item.usuario_nombre} ${item.usuario_apellido}`}
+              communityName={item.comunidad_nombre}
               onPress={() =>
                 router.push({
                   pathname: "/noticia",

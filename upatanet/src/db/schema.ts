@@ -46,7 +46,10 @@ CREATE TABLE IF NOT EXISTS Noticia (
   titulo TEXT NOT NULL DEFAULT '',
   descripcion TEXT NOT NULL DEFAULT '',
   categoria TEXT,
-  datetime TEXT
+  datetime TEXT,
+  usuario_nombre TEXT NOT NULL DEFAULT '',
+  usuario_apellido TEXT NOT NULL DEFAULT '',
+  comunidad_nombre TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS Alarma (

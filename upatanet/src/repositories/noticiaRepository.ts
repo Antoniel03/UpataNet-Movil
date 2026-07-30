@@ -9,6 +9,9 @@ export interface NoticiaRow {
   datetime: string | null;
   likes: number;
   dislikes: number;
+  usuario_nombre: string;
+  usuario_apellido: string;
+  comunidad_nombre: string;
 }
 
 const NOTICIA_WITH_REACTIONS = `
@@ -44,11 +47,14 @@ export async function createNoticia(
     descripcion: string;
     categoria: string;
     datetime: string;
+    usuario_nombre: string;
+    usuario_apellido: string;
+    comunidad_nombre: string;
   },
 ): Promise<number> {
   const result = await db.runAsync(
-    `INSERT INTO Noticia (usuario_id, titulo, descripcion, categoria, datetime) VALUES (?, ?, ?, ?, ?)`,
-    [data.usuario_id, data.titulo, data.descripcion, data.categoria, data.datetime],
+    `INSERT INTO Noticia (usuario_id, titulo, descripcion, categoria, datetime, usuario_nombre, usuario_apellido, comunidad_nombre) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [data.usuario_id, data.titulo, data.descripcion, data.categoria, data.datetime, data.usuario_nombre, data.usuario_apellido, data.comunidad_nombre],
   );
   return result.lastInsertRowId;
 }

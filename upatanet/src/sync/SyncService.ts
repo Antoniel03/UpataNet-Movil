@@ -91,12 +91,15 @@ async function loadNoticiasFromYjs() {
         typeof noticia.categoria === "string" ? noticia.categoria : null;
       const datetime =
         typeof noticia.datetime === "string" ? noticia.datetime : null;
-      const likes = typeof noticia.likes === "number" ? noticia.likes : 0;
-      const dislikes =
-        typeof noticia.dislikes === "number" ? noticia.dislikes : 0;
+      const usuario_nombre =
+        typeof noticia.usuario_nombre === "string" ? noticia.usuario_nombre : "";
+      const usuario_apellido =
+        typeof noticia.usuario_apellido === "string" ? noticia.usuario_apellido : "";
+      const comunidad_nombre =
+        typeof noticia.comunidad_nombre === "string" ? noticia.comunidad_nombre : "";
       await db.runAsync(
-        `INSERT INTO Noticia (id, usuario_id, titulo, descripcion, categoria, datetime, likes, dislikes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [id, 1, titulo, descripcion, categoria, datetime, likes, dislikes],
+        `INSERT OR IGNORE INTO Noticia (id, usuario_id, titulo, descripcion, categoria, datetime, usuario_nombre, usuario_apellido, comunidad_nombre) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [id, 1, titulo, descripcion, categoria, datetime, usuario_nombre, usuario_apellido, comunidad_nombre],
       );
     }
   }
