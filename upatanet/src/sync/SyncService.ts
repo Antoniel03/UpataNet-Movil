@@ -17,6 +17,7 @@ export type SyncSubscriber = {
 let ydoc: Y.Doc | null = null;
 let provider: WebsocketProvider | null = null;
 let subscribers: Set<SyncSubscriber> = new Set();
+const seenReactionNoticias = new Set<number>();
 
 export function isSyncConnected(): boolean {
   if (!provider) return false;
@@ -212,6 +213,19 @@ async function loadNoticiasFromYjs() {
     const entry = countMap.get(noticiaId)!;
     if (tipo === "like") entry.likes++;
     else if (tipo === "dislike") entry.dislikes++;
+  }
+
+  for (const noticiaId of countMap.keys()) {
+    seenReactionNoticias.add(noticiaId);
+  }
+
+  for (const noticiaId of seenReactionNoticias) {
+    if (!countMap.has(noticiaId)) {
+      await db.runAsync(
+        "UPDATE Noticia SET likes = 0, dislikes = 0 WHERE id = ?",
+        [noticiaId],
+      );
+    }
   }
 
   for (const [noticiaId, counts] of countMap) {
