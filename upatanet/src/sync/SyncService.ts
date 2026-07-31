@@ -78,10 +78,6 @@ export interface AlarmActivation {
   battery?: number;
 }
 
-function formatDate(d: Date): string {
-  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getFullYear()).slice(2)} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-}
-
 export function getAlarmActivationsArray(): Y.Array<AlarmActivation> | null {
   if (!ydoc) return null;
   return ydoc.getArray<AlarmActivation>("alarm_activations");
@@ -92,23 +88,6 @@ export function addAlarmActivation(activation: AlarmActivation) {
   const arr = ydoc.getArray<AlarmActivation>("alarm_activations");
   arr.push([activation]);
   notifyAlarmActivationsChange();
-
-  if (activation.action === 'on') {
-    const newsId = `alarm-${activation.id}`;
-    const map = ydoc.getMap("noticias");
-    map.set(newsId, {
-      id: newsId,
-      usuario_id: 1,
-      titulo: `Alarma activada en ${activation.communityId}`,
-      descripcion: `Alarma activada por dispositivo ${activation.esp32Mac.slice(-5)} a las ${new Date(activation.timestamp).toLocaleTimeString()}`,
-      categoria: 'alertas',
-      datetime: formatDate(new Date(activation.timestamp)),
-      likes: 0,
-      dislikes: 0,
-      severity: 'negro',
-      sourceAlarmId: activation.id,
-    } as Record<string, unknown>);
-  }
 }
 
 function attachProviderStatus(p: WebsocketProvider) {
