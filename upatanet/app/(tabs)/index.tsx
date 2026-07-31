@@ -119,7 +119,7 @@ export default function HomeScreen() {
           onPress={() => router.push("/(tabs)/alarma")}
         >
           <Ionicons
-            name="chatbubble-outline"
+            name="megaphone-outline"
             size={24}
             color={C.placeholderText}
           />
