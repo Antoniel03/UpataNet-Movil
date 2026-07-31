@@ -32,8 +32,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     initDatabase()
-      .then(() => {
-        initSync();
+      .then(async () => {
+        await initSync();
         setReady(true);
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Error al iniciar'));

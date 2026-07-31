@@ -5,8 +5,8 @@ import {
   getAllNoticias,
   getAllReactions,
 } from "@/src/repositories/noticiaRepository";
+import { loadSyncServerUrl } from "@/src/data/config-store";
 
-import { SYNC_SERVER_URL } from "./config";
 const ROOM_NAME = "upatanet-sync";
 
 export type SyncSubscriber = {
@@ -106,17 +106,22 @@ export function addAlarmActivation(activation: AlarmActivation) {
   }
 }
 
-export function initSync() {
-  const db = getDb();
-  ydoc = new Y.Doc();
-
-  provider = new WebsocketProvider(SYNC_SERVER_URL, ROOM_NAME, ydoc, {
-    connect: true,
-  });
-
-  provider.on("status", (event: { status: string }) => {
+function attachProviderStatus(p: WebsocketProvider) {
+  p.on("status", (event: { status: string }) => {
     console.log("[Sync] WebSocket:", event.status);
   });
+}
+
+export async function initSync() {
+  if (ydoc) return;
+  const db = getDb();
+  const url = await loadSyncServerUrl();
+  ydoc = new Y.Doc();
+
+  provider = new WebsocketProvider(url, ROOM_NAME, ydoc, {
+    connect: true,
+  });
+  attachProviderStatus(provider);
 
   const noticiasMap = ydoc.getMap("noticias");
 
@@ -147,6 +152,15 @@ export function initSync() {
   reactionsMap.observe(() => {
     loadNoticiasFromYjs();
   });
+}
+
+export function reconnectSync(url: string) {
+  if (!ydoc) return;
+  provider?.destroy();
+  provider = new WebsocketProvider(url, ROOM_NAME, ydoc, {
+    connect: true,
+  });
+  attachProviderStatus(provider);
 }
 
 async function loadNoticiasFromYjs() {
