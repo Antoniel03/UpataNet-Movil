@@ -1,0 +1,157 @@
+===========================================================
+  UPATANET — ESQUEMA DE BASE DE DATOS Y ARQUITECTURA
+  Branch: alarma-conectada (estado tras revertir GPS)
+===========================================================
+
+1. ESQUEMA COMPLETO DE BASE DE DATOS (SQLite)
+===========================================================
+(Schema ORIGINAL sin cambios — se revirtio el GPS)
+
+TABLA: Usuario
+-----------------------------------------------------------
+id            INTEGER PRIMARY KEY AUTOINCREMENT
+nombre        TEXT NOT NULL DEFAULT ''
+apellido      TEXT NOT NULL DEFAULT ''
+telefono      TEXT NOT NULL DEFAULT ''
+tipo          TEXT NOT NULL DEFAULT 'indigena'
+
+TABLA: Admin
+-----------------------------------------------------------
+id            INTEGER PRIMARY KEY AUTOINCREMENT
+usuario_id    INTEGER NOT NULL REFERENCES Usuario(id)
+nivel_acceso  TEXT NOT NULL DEFAULT 'basico'
+
+TABLA: Indigena
+-----------------------------------------------------------
+id              INTEGER PRIMARY KEY AUTOINCREMENT
+usuario_id      INTEGER NOT NULL REFERENCES Usuario(id)
+comunidad_id    INTEGER NOT NULL REFERENCES Comunidad(id)
+fecha_nacimiento TEXT NOT NULL DEFAULT ''
+
+TABLA: Representante
+-----------------------------------------------------------
+id            INTEGER PRIMARY KEY AUTOINCREMENT
+usuario_id    INTEGER NOT NULL REFERENCES Usuario(id)
+comunidad_id  INTEGER NOT NULL REFERENCES Comunidad(id)
+
+TABLA: Comunidad
+-----------------------------------------------------------
+id            INTEGER PRIMARY KEY AUTOINCREMENT
+nombre        TEXT NOT NULL DEFAULT ''
+ubicacion     TEXT NOT NULL DEFAULT ''
+descripcion   TEXT NOT NULL DEFAULT ''
+
+TABLA: Centro_Medico
+-----------------------------------------------------------
+id            INTEGER PRIMARY KEY AUTOINCREMENT
+nombre        TEXT NOT NULL DEFAULT ''
+ubicacion     TEXT NOT NULL DEFAULT ''
+contacto      TEXT NOT NULL DEFAULT ''
+
+TABLA: Noticia
+-----------------------------------------------------------
+id                  INTEGER PRIMARY KEY AUTOINCREMENT
+usuario_id          INTEGER NOT NULL DEFAULT 1 REFERENCES Usuario(id)
+titulo              TEXT NOT NULL DEFAULT ''
+descripcion         TEXT NOT NULL DEFAULT ''
+categoria           TEXT
+datetime            TEXT
+usuario_nombre      TEXT NOT NULL DEFAULT ''
+usuario_apellido    TEXT NOT NULL DEFAULT ''
+comunidad_nombre    TEXT NOT NULL DEFAULT ''
+likes               INTEGER NOT NULL DEFAULT 0
+dislikes            INTEGER NOT NULL DEFAULT 0
+
+TABLA: Alarma
+-----------------------------------------------------------
+id            INTEGER PRIMARY KEY AUTOINCREMENT
+noticia_id    INTEGER NOT NULL REFERENCES Noticia(id)
+activa        INTEGER NOT NULL DEFAULT 0
+
+TABLA: Jornada
+-----------------------------------------------------------
+id              INTEGER PRIMARY KEY AUTOINCREMENT
+titulo          TEXT NOT NULL DEFAULT ''
+descripcion     TEXT NOT NULL DEFAULT ''
+fecha           TEXT
+comunidad_id    INTEGER REFERENCES Comunidad(id)
+centro_medico_id INTEGER REFERENCES Centro_Medico(id)
+
+TABLA: Noticia_Reaction
+-----------------------------------------------------------
+id            INTEGER PRIMARY KEY AUTOINCREMENT
+usuario_id    INTEGER
+noticia_id    INTEGER
+tipo          TEXT
+
+
+2. CAMBIOS CONSERVADOS (SyncService.ts)
+===========================================================
+
+Los unicos cambios que quedan en la rama son los fixes de
+sincronizacion de ALARMAS. El GPS se revirtio por completo.
+
+addAlarmActivation():
+  - Categoria corregida: 'alerta' -> 'alertas'
+  - Datetime corregido: ISO -> formato DD/MM/YY HH:mm
+    (helper formatDate local)
+  - Se mantienen campos extra severity:'negro' y sourceAlarmId
+    en el payload Yjs (la DB local no los usa)
+
+loadNoticiasFromYjs():
+  - FIX cross-device: las keys 'alarm-*' ya no se descartan
+    por isNaN(). Antes solo el dispositivo que disparaba la
+    alarma veia su publicacion; ahora TODOS la reciben.
+  - Las alarmas se insertan localmente con id numerico =
+    timestamp (ultimo segmento del key alarm-<peer>-<ts>) y
+    INSERT OR IGNORE evita duplicados entre dispositivos.
+  - Keys numericas normales: comportamiento original.
+  - El INSERT no incluye nulls en params (bug conocido del
+    puente Kotlin — ver seccion 4).
+
+initSync():
+  - Guard "initialized" para evitar doble inicializacion
+    (initSync se llama desde _layout.tsx y alarma.tsx)
+
+
+3. SERVIDOR CRDT (raiz del proyecto)
+===========================================================
+
+Archivo: sync-server.js (identico a main, sin cambios)
+Ejecutar: node sync-server.js
+Escucha en ws://0.0.0.0:1234
+
+La app conecta a src/sync/config.ts -> SYNC_SERVER_URL
+(actualmente apunta a la IP local de la maquina de desarrollo).
+
+IMPORTANTE: solo debe correr UNA instancia. Si el puerto esta
+ocupado por un proceso node viejo, los datos residuales en
+memoria pueden corromper la sync. Verificar con:
+  Get-NetTCPConnection -LocalPort 1234 -State Listen
+
+
+4. BUG CONOCIDO DEL PUENTE (IMPORTANTE)
+===========================================================
+
+expo-sqlite en Android NO acepta null/undefined como parametro
+de runAsync: el puente Kotlin (Map<String, Any>) lanza
+"Cannot convert '[object Object]' to a Kotlin type".
+
+REGLA: jamas pasar null en el array de params. Para columnas
+nullables, construir el SQL dinamicamente y omitir la columna
+cuando el valor no exista.
+
+
+5. FLUJO DE ALARMA -> PUBLICACION AUTOMATICA
+===========================================================
+
+1. Usuario pulsa el boton de alarma (app/(tabs)/alarma.tsx)
+2. triggerAlarm() envia orden BLE al ESP32
+3. addAlarmActivation() crea:
+   - Entrada en el array Yjs "alarm_activations"
+   - Publicacion sintetica en el map Yjs "noticias"
+     con key "alarm-<id>", categoria 'alertas', datetime local
+4. El server Yjs la propaga a TODOS los dispositivos conectados
+5. Cada dispositivo inserta la noticia localmente (id=timestamp)
+6. Ademas, useAlarmaPublicacion publica "Alerta comunitaria
+   disparada" como noticia normal con id autoincrement
