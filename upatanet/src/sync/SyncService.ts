@@ -5,8 +5,8 @@ import {
   getAllNoticias,
   getAllReactions,
 } from "@/src/repositories/noticiaRepository";
+import { loadSyncServerUrl, getDeviceId } from "@/src/data/config-store";
 
-import { SYNC_SERVER_URL } from "./config";
 const ROOM_NAME = "upatanet-sync";
 
 export type SyncSubscriber = {
@@ -17,6 +17,7 @@ export type SyncSubscriber = {
 let ydoc: Y.Doc | null = null;
 let provider: WebsocketProvider | null = null;
 let subscribers: Set<SyncSubscriber> = new Set();
+const seenReactionNoticias = new Set<number>();
 let initialized = false;
 
 export function isSyncConnected(): boolean {
@@ -54,12 +55,12 @@ export function updateNoticiaInYjs(noticia: Record<string, unknown>) {
 
 export function syncReactionToYjs(
   noticiaId: number,
-  usuarioId: number,
+  deviceId: string,
   tipo: "like" | "dislike" | "",
 ) {
   if (!ydoc) return;
   const map = ydoc.getMap("reactions");
-  const key = `${noticiaId}_${usuarioId}`;
+  const key = `${noticiaId}_${deviceId}`;
   if (tipo === "") {
     map.delete(key);
   } else {
@@ -110,19 +111,23 @@ export function addAlarmActivation(activation: AlarmActivation) {
   }
 }
 
-export function initSync() {
+function attachProviderStatus(p: WebsocketProvider) {
+  p.on("status", (event: { status: string }) => {
+    console.log("[Sync] WebSocket:", event.status);
+  });
+}
+
+export async function initSync() {
   if (initialized) return;
   initialized = true;
   const db = getDb();
+  const url = await loadSyncServerUrl();
   ydoc = new Y.Doc();
 
-  provider = new WebsocketProvider(SYNC_SERVER_URL, ROOM_NAME, ydoc, {
+  provider = new WebsocketProvider(url, ROOM_NAME, ydoc, {
     connect: true,
   });
-
-  provider.on("status", (event: { status: string }) => {
-    console.log("[Sync] WebSocket:", event.status);
-  });
+  attachProviderStatus(provider);
 
   const noticiasMap = ydoc.getMap("noticias");
 
@@ -137,14 +142,16 @@ export function initSync() {
   });
 
   const reactionsMap = ydoc.getMap("reactions");
-  getAllReactions(db).then((reactions) => {
-    for (const r of reactions) {
-      const key = `${r.noticia_id}_${r.usuario_id}`;
-      if (!reactionsMap.get(key)) {
-        reactionsMap.set(key, r.tipo);
+  getDeviceId().then((deviceId) =>
+    getAllReactions(db, deviceId).then((reactions) => {
+      for (const r of reactions) {
+        const key = `${r.noticia_id}_${r.usuario_id}`;
+        if (!reactionsMap.get(key)) {
+          reactionsMap.set(key, r.tipo);
+        }
       }
-    }
-  });
+    }),
+  );
 
   noticiasMap.observe(() => {
     loadNoticiasFromYjs();
@@ -153,6 +160,15 @@ export function initSync() {
   reactionsMap.observe(() => {
     loadNoticiasFromYjs();
   });
+}
+
+export function reconnectSync(url: string) {
+  if (!ydoc) return;
+  provider?.destroy();
+  provider = new WebsocketProvider(url, ROOM_NAME, ydoc, {
+    connect: true,
+  });
+  attachProviderStatus(provider);
 }
 
 async function loadNoticiasFromYjs() {
@@ -218,6 +234,19 @@ async function loadNoticiasFromYjs() {
     const entry = countMap.get(noticiaId)!;
     if (tipo === "like") entry.likes++;
     else if (tipo === "dislike") entry.dislikes++;
+  }
+
+  for (const noticiaId of countMap.keys()) {
+    seenReactionNoticias.add(noticiaId);
+  }
+
+  for (const noticiaId of seenReactionNoticias) {
+    if (!countMap.has(noticiaId)) {
+      await db.runAsync(
+        "UPDATE Noticia SET likes = 0, dislikes = 0 WHERE id = ?",
+        [noticiaId],
+      );
+    }
   }
 
   for (const [noticiaId, counts] of countMap) {

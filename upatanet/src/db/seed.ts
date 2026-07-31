@@ -19,12 +19,6 @@ export async function seedIfEmpty(db: SQLiteDatabase) {
       (3, 1, 'Tala de árboles cerca de Comun', 'Se ha reportado tala indiscriminada de árboles en los alrededores de la comunidad. Solicitamos intervención de las autoridades ambientales.', 'naturaleza', '17/03/26 08:45', 'Usuario', '', 'General', 0, 1),
       (4, 1, 'Se esperan fuertes lluvias estos días', 'El servicio meteorológico ha emitido alerta por fuertes lluvias en la región durante los próximos días. Se recomienda tomar precauciones.', 'alertas', '17/03/26 16:00', 'Usuario', '', 'General', 1, 0);
 
-    INSERT INTO Noticia_Reaction (usuario_id, noticia_id, tipo) VALUES
-      (1, 1, 'like'),
-      (1, 2, 'like'),
-      (1, 3, 'dislike'),
-      (1, 4, 'like');
-
     INSERT INTO Alarma (id, noticia_id, activa) VALUES (1, 1, 0);
   `);
 }

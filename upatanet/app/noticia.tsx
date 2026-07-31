@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Colors } from "@/constants/upatanet-theme";
 import { useNoticias } from "@/src/hooks/useNoticias";
-import type { Noticia } from "@/src/data/noticiasStore";
+import { subscribe, type Noticia } from "@/src/data/noticiasStore";
 
 const C = Colors.light;
 
@@ -23,6 +23,13 @@ export default function NoticiaScreen() {
 
   useEffect(() => {
     getById(Number(id)).then(setNoticia);
+  }, [id, getById]);
+
+  useEffect(() => {
+    const unsub = subscribe(() => {
+      getById(Number(id)).then(setNoticia);
+    });
+    return unsub;
   }, [id, getById]);
 
   if (!noticia) {
@@ -57,22 +64,14 @@ export default function NoticiaScreen() {
           <View style={styles.interactionRow}>
             <TouchableOpacity
               style={styles.reactionBtn}
-              onPress={async () => {
-                await likeNoticia(noticia.id);
-                const updated = await getById(noticia.id);
-                if (updated) setNoticia(updated);
-              }}
+              onPress={() => likeNoticia(noticia.id)}
             >
               <Ionicons name="thumbs-up-outline" size={24} color={C.primary} />
               <Text style={styles.reactionText}>{String(noticia.likes).padStart(2, "0")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.reactionBtn}
-              onPress={async () => {
-                await dislikeNoticia(noticia.id);
-                const updated = await getById(noticia.id);
-                if (updated) setNoticia(updated);
-              }}
+              onPress={() => dislikeNoticia(noticia.id)}
             >
               <Ionicons name="thumbs-down-outline" size={24} color={C.primary} />
               <Text style={styles.reactionText}>{String(noticia.dislikes).padStart(2, "0")}</Text>

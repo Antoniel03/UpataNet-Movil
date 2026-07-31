@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -14,7 +15,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "@/constants/upatanet-theme";
 import { clearUserData } from "@/src/data/usuario-store";
+import { loadSyncServerUrl, setSyncServerUrl } from "@/src/data/config-store";
 import { useUsuario } from "@/src/hooks/use-usuario";
+import { isSyncConnected, reconnectSync } from "@/src/sync/SyncService";
 
 const C = Colors.light;
 
@@ -25,7 +28,23 @@ export default function ConfiguracionScreen() {
   const [tribe, setTribe] = useState("");
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
+  const [serverUrl, setServerUrl] = useState("");
+  const [serverError, setServerError] = useState("");
+  const [connected, setConnected] = useState(false);
+  const [showServerModal, setShowServerModal] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    loadSyncServerUrl().then(setServerUrl);
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setConnected(isSyncConnected());
+    }, 2000);
+    setConnected(isSyncConnected());
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (perfil) {
@@ -50,6 +69,23 @@ export default function ConfiguracionScreen() {
     setName("");
     setLastName("");
     setTribe("");
+  }
+
+  function handleSaveServer() {
+    setServerError("");
+    if (serverUrl.trim() === "") {
+      setServerError("Ingrese una dirección válida");
+      return;
+    }
+    setShowServerModal(true);
+  }
+
+  async function confirmSaveServer() {
+    setShowServerModal(false);
+    const normalized = await setSyncServerUrl(serverUrl);
+    setServerUrl(normalized);
+    reconnectSync(normalized);
+    setConnected(isSyncConnected());
   }
 
   if (loading) {
@@ -77,7 +113,7 @@ export default function ConfiguracionScreen() {
         <View style={styles.spacer} />
       </View>
 
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.containerUserImage}>
           <Ionicons name="person-circle-outline" size={150} color="#FFFFFF" />
         </View>
@@ -143,7 +179,41 @@ export default function ConfiguracionScreen() {
         >
           <Text style={styles.clearButtonText}>Limpiar datos</Text>
         </TouchableOpacity>
-      </View>
+
+        <View style={styles.serverSection}>
+          <Text style={styles.serverTitle}>Servidor de sincronización</Text>
+          <Text
+            style={[
+              styles.serverStatus,
+              { color: connected ? C.success : C.primaryDark },
+            ]}
+          >
+            Estado: {connected ? "Conectado" : "Desconectado"}
+          </Text>
+          <TextInput
+            value={serverUrl}
+            onChangeText={(text) => {
+              setServerUrl(text);
+              if (serverError !== "") setServerError("");
+            }}
+            placeholderTextColor="#FFFFFF"
+            placeholder="ws://192.168.x.x:1234"
+            style={styles.input}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+          />
+          {serverError !== "" && (
+            <Text style={styles.serverErrorText}>{serverError}</Text>
+          )}
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={handleSaveServer}
+          >
+            <Text style={styles.saveButtonText}>Guardar servidor</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
 
       <Modal
         visible={showSaveModal}
@@ -202,6 +272,35 @@ export default function ConfiguracionScreen() {
           </View>
         </View>
       </Modal>
+      <Modal
+        visible={showServerModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowServerModal(false)}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalText}>
+              ¿Está seguro de que quiere guardar la nueva dirección del servidor
+              de sincronización?
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: C.primary }]}
+                onPress={confirmSaveServer}
+              >
+                <Text style={styles.modalBtnText}>Sí</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: C.modalButtonGray }]}
+                onPress={() => setShowServerModal(false)}
+              >
+                <Text style={styles.modalBtnText}>No</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -221,7 +320,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: "bold", color: C.text },
   spacer: { width: 24 },
   content: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
@@ -292,6 +391,28 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: C.primaryDark,
     textDecorationLine: "underline",
+  },
+  serverSection: {
+    marginTop: 24,
+    alignItems: "center",
+    width: "100%",
+  },
+  serverTitle: {
+    fontSize: 17,
+    fontWeight: "bold",
+    color: C.text,
+    marginBottom: 4,
+  },
+  serverStatus: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginBottom: 10,
+  },
+  serverErrorText: {
+    fontSize: 11,
+    color: C.primaryDark,
+    marginTop: -8,
+    marginBottom: 10,
   },
   overlay: {
     flex: 1,

@@ -43,7 +43,7 @@ export default function AlarmaScreen() {
 
   useEffect(() => {
     if (!isSyncInitialized) {
-      initSync();
+      void initSync();
       setIsSyncInitialized(true);
     }
   }, [isSyncInitialized]);

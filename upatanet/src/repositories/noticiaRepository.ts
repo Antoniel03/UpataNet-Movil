@@ -72,21 +72,26 @@ export async function syncNoticiaCounts(
 
 export async function getAllReactions(
   db: SQLiteDatabase,
-): Promise<{ noticia_id: number; usuario_id: number; tipo: string }[]> {
-  return db.getAllAsync<{ noticia_id: number; usuario_id: number; tipo: string }>(
+  deviceId: string,
+): Promise<{ noticia_id: number; usuario_id: string; tipo: string }[]> {
+  await db.runAsync(
+    "UPDATE Noticia_Reaction SET usuario_id = ? WHERE typeof(usuario_id) = 'integer'",
+    [deviceId],
+  );
+  return db.getAllAsync<{ noticia_id: number; usuario_id: string; tipo: string }>(
     "SELECT noticia_id, usuario_id, tipo FROM Noticia_Reaction",
   );
 }
 
 export async function upsertReaction(
   db: SQLiteDatabase,
-  usuario_id: number,
+  deviceId: string,
   noticia_id: number,
   tipo: "like" | "dislike",
 ): Promise<"like" | "dislike" | null> {
   const existing = await db.getFirstAsync<{ id: number; tipo: string }>(
     "SELECT id, tipo FROM Noticia_Reaction WHERE usuario_id = ? AND noticia_id = ?",
-    [usuario_id, noticia_id],
+    [deviceId, noticia_id],
   );
 
   if (existing) {
@@ -103,7 +108,7 @@ export async function upsertReaction(
   } else {
     await db.runAsync(
       "INSERT INTO Noticia_Reaction (usuario_id, noticia_id, tipo) VALUES (?, ?, ?)",
-      [usuario_id, noticia_id, tipo],
+      [deviceId, noticia_id, tipo],
     );
     return tipo;
   }
