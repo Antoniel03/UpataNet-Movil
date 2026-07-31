@@ -5,7 +5,7 @@ import {
   getAllNoticias,
   getAllReactions,
 } from "@/src/repositories/noticiaRepository";
-import { loadSyncServerUrl } from "@/src/data/config-store";
+import { loadSyncServerUrl, getDeviceId } from "@/src/data/config-store";
 
 const ROOM_NAME = "upatanet-sync";
 
@@ -53,12 +53,12 @@ export function updateNoticiaInYjs(noticia: Record<string, unknown>) {
 
 export function syncReactionToYjs(
   noticiaId: number,
-  usuarioId: number,
+  deviceId: string,
   tipo: "like" | "dislike" | "",
 ) {
   if (!ydoc) return;
   const map = ydoc.getMap("reactions");
-  const key = `${noticiaId}_${usuarioId}`;
+  const key = `${noticiaId}_${deviceId}`;
   if (tipo === "") {
     map.delete(key);
   } else {
@@ -136,14 +136,16 @@ export async function initSync() {
   });
 
   const reactionsMap = ydoc.getMap("reactions");
-  getAllReactions(db).then((reactions) => {
-    for (const r of reactions) {
-      const key = `${r.noticia_id}_${r.usuario_id}`;
-      if (!reactionsMap.get(key)) {
-        reactionsMap.set(key, r.tipo);
+  getDeviceId().then((deviceId) =>
+    getAllReactions(db, deviceId).then((reactions) => {
+      for (const r of reactions) {
+        const key = `${r.noticia_id}_${r.usuario_id}`;
+        if (!reactionsMap.get(key)) {
+          reactionsMap.set(key, r.tipo);
+        }
       }
-    }
-  });
+    }),
+  );
 
   noticiasMap.observe(() => {
     loadNoticiasFromYjs();

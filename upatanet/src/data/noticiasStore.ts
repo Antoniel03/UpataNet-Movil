@@ -7,7 +7,8 @@ import {
   type NoticiaRow,
 } from "@/src/repositories/noticiaRepository";
 import { syncReactionToYjs, updateNoticiaInYjs } from "@/src/sync/SyncService";
-import { getCurrentUsuarioId, loadPerfil } from "@/src/data/usuario-store";
+import { getDeviceId } from "@/src/data/config-store";
+import { loadPerfil } from "@/src/data/usuario-store";
 
 export type Noticia = NoticiaRow;
 
@@ -15,7 +16,7 @@ type Listener = () => void;
 
 const listeners: Set<Listener> = new Set();
 
-function notify() {
+export function notifyChange() {
   for (const fn of listeners) {
     fn();
   }
@@ -60,22 +61,22 @@ export async function publishNoticia(data: {
   });
   const created = await repoGetNoticiaById(db, id);
   if (created) updateNoticiaInYjs(created as unknown as Record<string, unknown>);
-  notify();
+  notifyChange();
   return id;
 }
 
 export async function likeNoticia(id: number): Promise<void> {
   const db = getDb();
-  const usuario_id = await getCurrentUsuarioId();
-  const result = await upsertReaction(db, usuario_id, id, "like");
-  syncReactionToYjs(id, usuario_id, result ?? "");
-  notify();
+  const deviceId = await getDeviceId();
+  const result = await upsertReaction(db, deviceId, id, "like");
+  syncReactionToYjs(id, deviceId, result ?? "");
+  notifyChange();
 }
 
 export async function dislikeNoticia(id: number): Promise<void> {
   const db = getDb();
-  const usuario_id = await getCurrentUsuarioId();
-  const result = await upsertReaction(db, usuario_id, id, "dislike");
-  syncReactionToYjs(id, usuario_id, result ?? "");
-  notify();
+  const deviceId = await getDeviceId();
+  const result = await upsertReaction(db, deviceId, id, "dislike");
+  syncReactionToYjs(id, deviceId, result ?? "");
+  notifyChange();
 }

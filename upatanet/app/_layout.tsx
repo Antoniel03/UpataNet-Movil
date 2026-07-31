@@ -7,7 +7,8 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
 import { initDatabase } from '@/src/db/database';
-import { initSync } from '@/src/sync/SyncService';
+import { initSync, subscribe as subscribeSync } from '@/src/sync/SyncService';
+import { notifyChange } from '@/src/data/noticiasStore';
 
 const UpatanetTheme = {
   ...DefaultTheme,
@@ -34,6 +35,7 @@ export default function RootLayout() {
     initDatabase()
       .then(async () => {
         await initSync();
+        subscribeSync({ onNoticiasChange: () => notifyChange() });
         setReady(true);
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Error al iniciar'));
