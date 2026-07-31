@@ -18,6 +18,7 @@ let ydoc: Y.Doc | null = null;
 let provider: WebsocketProvider | null = null;
 let subscribers: Set<SyncSubscriber> = new Set();
 const seenReactionNoticias = new Set<number>();
+let initialized = false;
 
 export function isSyncConnected(): boolean {
   if (!provider) return false;
@@ -77,6 +78,10 @@ export interface AlarmActivation {
   battery?: number;
 }
 
+function formatDate(d: Date): string {
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getFullYear()).slice(2)} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
 export function getAlarmActivationsArray(): Y.Array<AlarmActivation> | null {
   if (!ydoc) return null;
   return ydoc.getArray<AlarmActivation>("alarm_activations");
@@ -88,17 +93,16 @@ export function addAlarmActivation(activation: AlarmActivation) {
   arr.push([activation]);
   notifyAlarmActivationsChange();
 
-  // Auto-generate 'negro' news post when alarm is triggered
   if (activation.action === 'on') {
     const newsId = `alarm-${activation.id}`;
     const map = ydoc.getMap("noticias");
     map.set(newsId, {
       id: newsId,
       usuario_id: 1,
-      titulo: `🚨 Alarma activada en ${activation.communityId}`,
+      titulo: `Alarma activada en ${activation.communityId}`,
       descripcion: `Alarma activada por dispositivo ${activation.esp32Mac.slice(-5)} a las ${new Date(activation.timestamp).toLocaleTimeString()}`,
-      categoria: 'alerta',
-      datetime: new Date(activation.timestamp).toISOString(),
+      categoria: 'alertas',
+      datetime: formatDate(new Date(activation.timestamp)),
       likes: 0,
       dislikes: 0,
       severity: 'negro',
@@ -114,7 +118,8 @@ function attachProviderStatus(p: WebsocketProvider) {
 }
 
 export async function initSync() {
-  if (ydoc) return;
+  if (initialized) return;
+  initialized = true;
   const db = getDb();
   const url = await loadSyncServerUrl();
   ydoc = new Y.Doc();
@@ -173,8 +178,37 @@ async function loadNoticiasFromYjs() {
 
   for (const [key, value] of map) {
     const noticia = value as Record<string, unknown>;
-    const id = parseInt(key, 10);
-    if (isNaN(id) || id <= 1) continue;
+    const isAlarmKey = key.startsWith('alarm-');
+    const numericId = parseInt(key, 10);
+
+    // Las noticias generadas por alarma usan keys "alarm-<id>".
+    // Se insertan con un id numerico derivado del timestamp (ultimo
+    // segmento del key) + INSERT OR IGNORE para evitar duplicados
+    // entre dispositivos.
+    let id: number;
+    if (isAlarmKey) {
+      const parts = key.split('-');
+      const ts = parseInt(parts[parts.length - 1], 10);
+      if (isNaN(ts)) continue;
+      id = ts;
+    } else {
+      if (isNaN(numericId) || numericId <= 1) continue;
+      id = numericId;
+    }
+
+    const titulo = typeof noticia.titulo === "string" ? noticia.titulo : "";
+    const descripcion =
+      typeof noticia.descripcion === "string" ? noticia.descripcion : "";
+    const categoria =
+      typeof noticia.categoria === "string" ? noticia.categoria : "";
+    const datetime =
+      typeof noticia.datetime === "string" ? noticia.datetime : "";
+    const usuario_nombre =
+      typeof noticia.usuario_nombre === "string" ? noticia.usuario_nombre : "";
+    const usuario_apellido =
+      typeof noticia.usuario_apellido === "string" ? noticia.usuario_apellido : "";
+    const comunidad_nombre =
+      typeof noticia.comunidad_nombre === "string" ? noticia.comunidad_nombre : "";
 
     const exists = await db.getFirstAsync<{ id: number }>(
       "SELECT id FROM Noticia WHERE id = ?",
@@ -182,19 +216,6 @@ async function loadNoticiasFromYjs() {
     );
 
     if (!exists) {
-      const titulo = typeof noticia.titulo === "string" ? noticia.titulo : "";
-      const descripcion =
-        typeof noticia.descripcion === "string" ? noticia.descripcion : "";
-      const categoria =
-        typeof noticia.categoria === "string" ? noticia.categoria : null;
-      const datetime =
-        typeof noticia.datetime === "string" ? noticia.datetime : null;
-      const usuario_nombre =
-        typeof noticia.usuario_nombre === "string" ? noticia.usuario_nombre : "";
-      const usuario_apellido =
-        typeof noticia.usuario_apellido === "string" ? noticia.usuario_apellido : "";
-      const comunidad_nombre =
-        typeof noticia.comunidad_nombre === "string" ? noticia.comunidad_nombre : "";
       await db.runAsync(
         `INSERT OR IGNORE INTO Noticia (id, usuario_id, titulo, descripcion, categoria, datetime, usuario_nombre, usuario_apellido, comunidad_nombre) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [id, 1, titulo, descripcion, categoria, datetime, usuario_nombre, usuario_apellido, comunidad_nombre],
