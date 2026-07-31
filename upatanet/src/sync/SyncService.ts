@@ -1,7 +1,10 @@
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { getDb } from "@/src/db/database";
-import { getAllNoticias } from "@/src/repositories/noticiaRepository";
+import {
+  getAllNoticias,
+  getAllReactions,
+} from "@/src/repositories/noticiaRepository";
 
 import { SYNC_SERVER_URL } from "./config";
 const ROOM_NAME = "upatanet-sync";
@@ -44,7 +47,23 @@ export function getYDoc(): Y.Doc | null {
 export function updateNoticiaInYjs(noticia: Record<string, unknown>) {
   if (!ydoc) return;
   const map = ydoc.getMap("noticias");
-  map.set(String(noticia.id), noticia);
+  const { likes, dislikes, ...clean } = noticia;
+  map.set(String(noticia.id), clean);
+}
+
+export function syncReactionToYjs(
+  noticiaId: number,
+  usuarioId: number,
+  tipo: "like" | "dislike" | "",
+) {
+  if (!ydoc) return;
+  const map = ydoc.getMap("reactions");
+  const key = `${noticiaId}_${usuarioId}`;
+  if (tipo === "") {
+    map.delete(key);
+  } else {
+    map.set(key, tipo);
+  }
 }
 
 export interface AlarmActivation {
@@ -105,12 +124,27 @@ export function initSync() {
     for (const noticia of existing) {
       const key = String(noticia.id);
       if (!noticiasMap.get(key)) {
-        noticiasMap.set(key, noticia as unknown as Record<string, unknown>);
+        const { likes, dislikes, ...clean } = noticia;
+        noticiasMap.set(key, clean as unknown as Record<string, unknown>);
+      }
+    }
+  });
+
+  const reactionsMap = ydoc.getMap("reactions");
+  getAllReactions(db).then((reactions) => {
+    for (const r of reactions) {
+      const key = `${r.noticia_id}_${r.usuario_id}`;
+      if (!reactionsMap.get(key)) {
+        reactionsMap.set(key, r.tipo);
       }
     }
   });
 
   noticiasMap.observe(() => {
+    loadNoticiasFromYjs();
+  });
+
+  reactionsMap.observe(() => {
     loadNoticiasFromYjs();
   });
 }
@@ -138,14 +172,37 @@ async function loadNoticiasFromYjs() {
         typeof noticia.categoria === "string" ? noticia.categoria : null;
       const datetime =
         typeof noticia.datetime === "string" ? noticia.datetime : null;
-      const likes = typeof noticia.likes === "number" ? noticia.likes : 0;
-      const dislikes =
-        typeof noticia.dislikes === "number" ? noticia.dislikes : 0;
+      const usuario_nombre =
+        typeof noticia.usuario_nombre === "string" ? noticia.usuario_nombre : "";
+      const usuario_apellido =
+        typeof noticia.usuario_apellido === "string" ? noticia.usuario_apellido : "";
+      const comunidad_nombre =
+        typeof noticia.comunidad_nombre === "string" ? noticia.comunidad_nombre : "";
       await db.runAsync(
-        `INSERT INTO Noticia (id, usuario_id, titulo, descripcion, categoria, datetime, likes, dislikes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [id, 1, titulo, descripcion, categoria, datetime, likes, dislikes],
+        `INSERT OR IGNORE INTO Noticia (id, usuario_id, titulo, descripcion, categoria, datetime, usuario_nombre, usuario_apellido, comunidad_nombre) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [id, 1, titulo, descripcion, categoria, datetime, usuario_nombre, usuario_apellido, comunidad_nombre],
       );
     }
+  }
+
+  const reactionsMap = ydoc.getMap("reactions");
+  const countMap = new Map<number, { likes: number; dislikes: number }>();
+
+  for (const [key, tipo] of reactionsMap) {
+    const parts = key.split("_");
+    const noticiaId = parseInt(parts[0], 10);
+    if (isNaN(noticiaId)) continue;
+    if (!countMap.has(noticiaId)) countMap.set(noticiaId, { likes: 0, dislikes: 0 });
+    const entry = countMap.get(noticiaId)!;
+    if (tipo === "like") entry.likes++;
+    else if (tipo === "dislike") entry.dislikes++;
+  }
+
+  for (const [noticiaId, counts] of countMap) {
+    await db.runAsync(
+      "UPDATE Noticia SET likes = ?, dislikes = ? WHERE id = ?",
+      [counts.likes, counts.dislikes, noticiaId],
+    );
   }
 
   notifyNoticiasChange();

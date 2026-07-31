@@ -47,6 +47,9 @@ CREATE TABLE IF NOT EXISTS Noticia (
   descripcion TEXT NOT NULL DEFAULT '',
   categoria TEXT,
   datetime TEXT,
+  usuario_nombre TEXT NOT NULL DEFAULT '',
+  usuario_apellido TEXT NOT NULL DEFAULT '',
+  comunidad_nombre TEXT NOT NULL DEFAULT '',
   likes INTEGER NOT NULL DEFAULT 0,
   dislikes INTEGER NOT NULL DEFAULT 0
 );
@@ -64,5 +67,14 @@ CREATE TABLE IF NOT EXISTS Jornada (
   fecha TEXT,
   comunidad_id INTEGER REFERENCES Comunidad(id) ON DELETE SET NULL,
   centro_medico_id INTEGER REFERENCES Centro_Medico(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS "Noticia_Reaction" (
+  "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+  "usuario_id" INTEGER,
+  "noticia_id" INTEGER,
+  "tipo" TEXT,
+  FOREIGN KEY ("usuario_id") REFERENCES "Usuario" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY ("noticia_id") REFERENCES "Noticia" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 `;
