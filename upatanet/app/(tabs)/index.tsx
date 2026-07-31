@@ -116,13 +116,6 @@ export default function HomeScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.tabItem}
-          onPress={() => router.push("/(tabs)/mapa")}
-        >
-          <Ionicons name="map-outline" size={24} color={C.placeholderText} />
-          <Text style={styles.tabText}>Mapa</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.tabItem}
           onPress={() => router.push("/(tabs)/alarma")}
         >
           <Ionicons
