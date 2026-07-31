@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors } from "@/constants/theme";
+import { Colors } from "@/constants/upatanet-theme";
 import { clearUserData } from "@/src/data/usuario-store";
 import { useUsuario } from "@/src/hooks/use-usuario";
 
